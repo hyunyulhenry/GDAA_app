@@ -39,6 +39,15 @@ ui = navbarPage(
                       br(),
                       plotlyOutput("wts_now"),
                       br(),
+                      dateRangeInput('range2', 'Date Range',
+                                     start = '2008-01-01',
+                                     end = Sys.Date(),
+                                     min = '2008-01-01',
+                                     max = Sys.Date(),
+                                     format = "yyyy-mm-dd",
+                                     separator = " - "),
+                      plotlyOutput("wts_hist"),
+                      br(),
                       DT::dataTableOutput("wts_table")
                       ),
              tabPanel("Raw Data",
@@ -122,8 +131,6 @@ ui = navbarPage(
 
 )
 
-
-
 server = function(input, output) {
 
   # Download Price Data
@@ -205,8 +212,31 @@ server = function(input, output) {
                       showarrow = FALSE)
   })
   
+  # Historical Weight
+  output$wts_hist = renderPlotly({
+    plot_ly(data = data.frame(wts[paste0(input$`range2`[1],"::",input$`range2`[2])]) %>%
+              cbind('Date' = rownames(.), .),
+            x = ~Date, y = ~SPY, name = 'SPY', type = 'scatter', mode = 'none', stackgroup = 'one') %>%
+      add_trace(y = ~IEV, name = 'IEV', type = 'scatter', mode = 'none', stackgroup = 'one') %>%
+      add_trace(y = ~EWJ, name = 'EWJ', type = 'scatter', mode = 'none', stackgroup = 'one') %>%
+      add_trace(y = ~EEM, name = 'EEM', type = 'scatter', mode = 'none', stackgroup = 'one') %>%
+      add_trace(y = ~TLT, name = 'TLT', type = 'scatter', mode = 'none', stackgroup = 'one') %>%
+      add_trace(y = ~IEF, name = 'IEF', type = 'scatter', mode = 'none', stackgroup = 'one') %>%
+      add_trace(y = ~IYR, name = 'IYR', type = 'scatter', mode = 'none', stackgroup = 'one') %>%
+      add_trace(y = ~RWX, name = 'RWX', type = 'scatter', mode = 'none', stackgroup = 'one') %>%
+      add_trace(y = ~GLD, name = 'GLD', type = 'scatter', mode = 'none', stackgroup = 'one') %>%
+      add_trace(y = ~DBC, name = 'DBC', type = 'scatter', mode = 'none', stackgroup = 'one') %>%
+      layout(title = 'Historical Portfolio Weight',
+             xaxis = list(title = "",
+                          type = 'date',
+                          tickformat = '%y-%m'),
+             yaxis = list(title = "",
+                          tickformat = '%'))
+  })
+  
+  # Weight Table
   output$wts_table = DT::renderDataTable({
-    data.frame(round(wts,4)) %>%
+    data.frame(round(wts[paste0(input$`range2`[1],"::",input$`range2`[2])], 4)) %>%
       cbind('Date' = rownames(.), .) %>%
       `rownames<-` (NULL)
     
