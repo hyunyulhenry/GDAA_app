@@ -52,6 +52,15 @@ ui = navbarPage(
                       ),
              tabPanel("Raw Data",
                       br(),
+                      dateRangeInput('range3', 'Date Range',
+                                     start = '2008-01-01',
+                                     end = Sys.Date(),
+                                     min = '2008-01-01',
+                                     max = Sys.Date(),
+                                     format = "yyyy-mm-dd",
+                                     separator = " - "),
+                      plotlyOutput("raw_ret_chart"),
+                      br(),
                       DT::dataTableOutput("raw_data"),
                       br(),
                       fluidRow(
@@ -240,6 +249,28 @@ server = function(input, output) {
       cbind('Date' = rownames(.), .) %>%
       `rownames<-` (NULL)
     
+  })
+  
+  # Raw Return Chart
+  output$raw_ret_chart = renderPlotly({
+    plot_ly(data = data.frame(cumprod(1 + rets[paste0(input$`range3`[1],"::",input$`range3`[2])])-1) %>%
+              cbind('Date' = rownames(.), .),
+            x = ~Date, y = ~SPY, name = 'SPY', type = 'scatter', mode = 'line') %>%
+      add_trace(y = ~IEV, name = 'IEV', type = 'scatter', mode = 'line') %>%
+      add_trace(y = ~EWJ, name = 'EWJ', type = 'scatter', mode = 'line') %>%
+      add_trace(y = ~EEM, name = 'EEM', type = 'scatter', mode = 'line') %>%
+      add_trace(y = ~TLT, name = 'TLT', type = 'scatter', mode = 'line') %>%
+      add_trace(y = ~IEF, name = 'IEF', type = 'scatter', mode = 'line') %>%
+      add_trace(y = ~IYR, name = 'IYR', type = 'scatter', mode = 'line') %>%
+      add_trace(y = ~RWX, name = 'RWX', type = 'scatter', mode = 'line') %>%
+      add_trace(y = ~GLD, name = 'GLD', type = 'scatter', mode = 'line') %>%
+      add_trace(y = ~DBC, name = 'DBC', type = 'scatter', mode = 'line') %>%
+      layout(title = 'ETF Raw Return',
+             xaxis = list(title = "",
+                          type = 'date',
+                          tickformat = '%y-%m'),
+             yaxis = list(title = "",
+                          tickformat = '%'))
   })
   
   
