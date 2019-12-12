@@ -9,6 +9,10 @@
 - 2016 ~ 2019 : NH-Amundi Asset Management, Quant Manager
 - 2014 ~ 2016 : Korea Investment & Securities, Equity
 
+**Publications**
+- R을 이용한 퀀트 투자 포트폴리오 만들기: http://www.yes24.com/Product/Goods/78125551
+- Smart Beta: http://www.yes24.com/Product/Goods/56018775
+
 **Contact Information**
 - http://henryquant.blogspot.com
 - https://kr.linkedin.com/in/hyunyul-lee-34952096
