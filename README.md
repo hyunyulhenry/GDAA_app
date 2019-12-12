@@ -5,8 +5,7 @@ To run the project either fork/download the files and run the **app.R**-file, or
 ```{r}
 shiny::runGitHub('GDAA', 'hyunyulhenry')
 ```
-
-In order to run the project properly, you need to have the following packages installed: **DT**, **quadprog**, **plotly**, **quantmod**, **PerformanceAnalytics**, and **shiny**
+In order to run the project properly, you need to have the following packages installed.
 
 To install all packages you can also use
 ```{r}
