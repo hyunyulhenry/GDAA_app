@@ -12,7 +12,7 @@ return_raw = function() {
 output$raw_graph = renderHighchart({
  
   df_raw = return_raw()
-  
+
   df_raw = df_raw %>%
     fortify.zoo() %>%
     mutate_at(vars(-Index), list(~cumprod(1+.) - 1)) %>%
@@ -27,10 +27,13 @@ output$raw_graph = renderHighchart({
              opposite = TRUE,
              labels = list(format = '{value}')) %>%
     hc_xAxis(title = '') %>%
-    hc_tooltip(pointFormat = '{point.x:%Y-%m-%d}
-               {point.y:.4f}')
-  
-  
+    hc_tooltip(pointFormat = "<span style=\"color:{series.color}\">{series.name}</span>:
+             <b>{point.y:.4f}</b><br/>",
+               shared = TRUE) %>%
+    hc_plotOptions(line = list(
+      marker = list(
+        enabled = FALSE
+      ))) 
 })
 
 output$raw_table = renderDT({
@@ -43,7 +46,6 @@ output$raw_table = renderDT({
     mutate_at(vars(-Index), list(~(round(., 4)))) %>%
     datatable(rownames = FALSE,
               options = list(pageLength = 50, dom = 'tip'))
-
 
 })
 

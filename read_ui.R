@@ -38,3 +38,13 @@ output$tz = renderUI({
     animation = 'smooth'
   )
 })
+
+output$switch = renderUI({
+  prettySwitch(
+    inputId = "switch",
+    label = "Weight by Asset Class",
+    value = FALSE, 
+    status = "info",
+    fill = TRUE
+  )
+})

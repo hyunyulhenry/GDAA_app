@@ -18,9 +18,10 @@ output$daily_table = renderDT({
   df = return_pr()
   
   df %>% fortify.zoo() %>% 
-    mutate(Returns = round(Returns, 4)) %>%
+    mutate(Returns = numeric_to_perc(Returns)) %>%
     datatable(rownames = FALSE,
-              options = list(pageLength = 50, dom = 'tip'))
+              options = list(pageLength = 50, dom = 'tip',
+                             columnDefs = list(list(className = 'dt-right', targets = "_all"))))
   
   
 })

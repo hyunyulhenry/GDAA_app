@@ -1,3 +1,28 @@
+wts_period = function() {
+ 
+  t1 = input$date[[1]] %>% as.character()
+  t2 = input$date[[2]] %>% as.character()
+  
+  wts_period = wts[paste0(t1, "::", t2)]
+  
+  if (input$switch == TRUE) {
+    
+    wts_period = wts_period %>%
+      fortify.zoo() %>%
+      transmute(
+        Index = Index,
+        Stock = rowSums(.[2:5]),
+        Bond = rowSums(.[6:7]),
+        Alternative = rowSums(.[8:11]))
+  } else { 
+    wts_period = wts_period %>%
+      fortify.zoo()
+    }
+  
+  return(wts_period)
+   
+}
+
 output$wts_now = renderHighchart({
   
   wt_last = tail(wts, 1) %>% data.frame() %>%
@@ -21,8 +46,7 @@ output$wts_now = renderHighchart({
 
 output$wts_list = renderHighchart({
   
-  wts %>%
-    fortify.zoo %>%
+  wts_period() %>%
     gather(key, value, -Index) %>%
     mutate(key = factor(key, levels = unique(key))) %>%
     mutate(value = ifelse(value == 0, NA, value)) %>%
@@ -45,16 +69,44 @@ output$wts_list = renderHighchart({
   
 })
 
-
 output$wts_table = renderDT({
+  
+  wts_period() %>%
+    mutate_at(vars(-Index), list(~(numeric_to_perc(.)))) %>%
+    datatable(rownames = FALSE,
+              options = list(pageLength = 30, dom = 'tip',
+                             columnDefs = list(list(className = 'dt-right', targets = "_all"))))
+  
+})
+
+output$wts_turnover = renderHighchart({
   
   t1 = input$date[[1]] %>% as.character()
   t2 = input$date[[2]] %>% as.character()
   
-  wts[paste0(t1, "::", t2)] %>% fortify.zoo() %>%
-    mutate_at(vars(-Index), list(~(round(., 4)))) %>%
-    datatable(rownames = FALSE,
-              options = list(pageLength = 30, dom = 'tip'))
+  turnover_period = port_turnover[paste0(t1, "::", t2)] %>% 
+    fortify.zoo() %>%
+    filter(. != 0) %>%
+    dplyr::rename(`turnover` = '.')
   
+  turnover_period %>%
+    mutate(turnover = multiply_by(turnover, 100)) %>%
+    hchart(., 
+           type = "column",
+           hcaes(x = Index, 
+                 y = turnover 
+           )
+    ) %>% 
+    hc_plotOptions(column =list(dataLabels =
+                                  list(enabled = TRUE,
+                                       format="{point.y: .2f}%"))) %>%
+    hc_title(text = "Turnover (2 way)") %>%
+    hc_yAxis(title = '', 
+             opposite = TRUE,
+             labels = list(format = "{value}")) %>%
+    hc_xAxis(title = '') %>%
+    hc_tooltip(pointFormat = '{point.y: .2f}%') 
+  
+ 
   
 })

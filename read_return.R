@@ -1,3 +1,8 @@
+numeric_to_perc = function(number) {
+  number %>% round(., 4) %>%
+    multiply_by(., 100) %>% paste(., '%')
+}
+
 return_pr = function() {
   
   t1 = input$date[[1]] %>% as.character()
@@ -32,12 +37,14 @@ output$cum_graph = renderHighchart({
   # return graph
   df_ret = df %>% 
     fortify.zoo() %>%
-    mutate_at(vars(-Index), list(~cumprod(1+.) - 1))
+    mutate_at(vars(-Index), list(~cumprod(1+.) - 1)) %>%
+    mutate(Returns =  multiply_by(Returns, 100))
   
   # drawdown graph
   df_dd = df %>%
     Drawdowns() %>%
-    fortify.zoo()
+    fortify.zoo() %>%
+    mutate(Returns =  multiply_by(Returns, 100))
   
   # chart
   if (input$type == 'a') {
@@ -52,10 +59,10 @@ output$cum_graph = renderHighchart({
     hc_title(text = 'Graph') %>%
     hc_yAxis(title = '',
              opposite = TRUE,
-             labels = list(format = '{value}')) %>%
+             labels = list(format = '{value}%')) %>%
     hc_xAxis(title = '') %>%
     hc_tooltip(pointFormat = '{point.x:%Y-%m-%d}
-               {point.y: .4f}')
+               {point.y: .2f}%')
   
 })
 
@@ -64,17 +71,17 @@ output$stat = function() {
   df = return_pr()
   
   list(
-    'Cumulative Return' = Return.cumulative(df),
-    'Annualized Return' = Return.annualized(df),
-    'Annualized Vol' = StdDev.annualized(df),
-    'Sharpe Ratio' = SharpeRatio.annualized(df),
-    'MDD' = maxDrawdown(df)
+    'Cumulative Return' = Return.cumulative(df) %>% numeric_to_perc(),
+    'Annualized Return' = Return.annualized(df) %>% numeric_to_perc(),
+    'Annualized Vol' = StdDev.annualized(df) %>% numeric_to_perc(),
+    'Sharpe Ratio' = SharpeRatio.annualized(df) %>% round(., 4),
+    'MDD' = maxDrawdown(df) %>% numeric_to_perc()
   ) %>% do.call(rbind, .) %>%
     data.frame() %>%
     set_colnames('Value') %>%
     mutate(Index = rownames(.)) %>%
     select(Index, Value) %>%
-    mutate(Value = round(Value, 4) ) %>%
+    # mutate(Value = round(Value, 4) ) %>%
     kable(., align = "c", esacpe = F) %>%
     kable_styling(bootstrap_options =
                     c("striped", "hover", "condensed", "responsive")) %>%
@@ -88,6 +95,7 @@ output$period_graph = renderHighchart({
   df_mod = return_period()
   
   df_mod %>%
+    mutate(Returns = multiply_by(Returns, 100)) %>%
     hchart(., 
            type = "column",
            hcaes(x = Index, 
@@ -96,13 +104,13 @@ output$period_graph = renderHighchart({
            )%>% 
     hc_plotOptions(column =list(dataLabels =
                                list(enabled = TRUE,
-                                    format="{point.y: .4f}"))) %>%
+                                    format="{point.y: .2f}%"))) %>%
     hc_title(text = "Returns by period") %>%
     hc_yAxis(title = '', 
              opposite = TRUE,
-             labels = list(format = "{value}")) %>%
+             labels = list(format = "{value}%")) %>%
     hc_xAxis(title = '') %>%
-    hc_tooltip(pointFormat = '{point.y: .4f}') 
+    hc_tooltip(pointFormat = '{point.y: .2f}%') 
   
   
 })
@@ -113,9 +121,11 @@ output$period_return = renderDT({
   df_mod = return_period()
   
   df_mod %>% 
-    mutate_at(vars(-Index), list(~(round(., 4)))) %>%
+    mutate(Returns = numeric_to_perc(Returns)) %>%
     datatable(rownames = FALSE,
-              options = list(pageLength = 50, dom = 'tip'))
+              options = list(pageLength = 50, dom = 'tip',
+                             columnDefs = list(list(className = 'dt-right', targets = "_all"))))
   
   
 })
+  
